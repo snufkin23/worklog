@@ -1,0 +1,14 @@
+
+# Secrets
+.env
+*.env
+!.env.example
+service-account*.json
+
+# Build output
+/server/bin/
+/cli/bin/
+
+# Flutter
+/mobile/build/
+/mobile/.dart_tool/
