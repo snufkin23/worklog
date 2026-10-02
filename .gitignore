@@ -12,3 +12,4 @@ service-account*.json
 # Flutter
 /mobile/build/
 /mobile/.dart_tool/
+*.iml
