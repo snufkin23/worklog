@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/snufkin23/worklog/server/internal/entries"
 	"github.com/snufkin23/worklog/server/internal/platform"
 	"github.com/snufkin23/worklog/server/internal/tasks"
 )
@@ -36,6 +37,7 @@ func run() error {
 
 	api := http.NewServeMux()
 	tasks.NewHandler(tasks.NewStore(pool)).Register(api)
+	entries.NewHandler(entries.NewStore(pool)).Register(api)
 
 	root := http.NewServeMux()
 	root.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {

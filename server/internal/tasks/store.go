@@ -2,10 +2,16 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	ErrNotFound     = errors.New("task not found")
+	ErrInvalidState = errors.New("action not allowed in the task's current state")
 )
 
 const taskColumns = `id, title, status, blocker_reason, important, created_at, updated_at, closed_at`
@@ -69,4 +75,63 @@ func (s *Store) ListActive(ctx context.Context) ([]Task, error) {
 		tasks = append(tasks, t)
 	}
 	return tasks, rows.Err()
+}
+
+// Apply performs a lifecycle action: updates the task and writes its event in one transaction.
+func (s *Store) Apply(ctx context.Context, id int64, action Action, text string) (Task, error) {
+	r, ok := rules[action]
+	if !ok {
+		return Task{}, fmt.Errorf("unknown action %q", action)
+	}
+
+	var reason *string
+	if action == Block {
+		reason = &text
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Task{}, fmt.Errorf("begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	t, err := scanTask(tx.QueryRow(ctx,
+		`UPDATE tasks SET
+			status         = CASE WHEN $2::text = '' THEN status ELSE $2::text END,
+			blocker_reason = CASE WHEN $2::text = '' THEN blocker_reason ELSE $3::text END,
+			updated_at     = now(),
+			closed_at      = CASE WHEN $2::text IN ('done', 'dropped') THEN now() ELSE NULL END
+		WHERE id = $1 AND status = ANY($4::text[])
+		RETURNING `+taskColumns,
+		id, r.to, reason, r.from))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Task{}, diagnose(ctx, tx, id)
+	}
+	if err != nil {
+		return Task{}, fmt.Errorf("update task: %w", err)
+	}
+
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO events (task_id, type, text) VALUES ($1, $2, $3)`,
+		id, r.event, text); err != nil {
+		return Task{}, fmt.Errorf("insert event: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return Task{}, fmt.Errorf("commit: %w", err)
+	}
+	return t, nil
+}
+
+// diagnose explains why an update matched no rows: missing task or wrong state.
+func diagnose(ctx context.Context, tx pgx.Tx, id int64) error {
+	var status string
+	err := tx.QueryRow(ctx, `SELECT status FROM tasks WHERE id = $1`, id).Scan(&status)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("check task: %w", err)
+	}
+	return fmt.Errorf("%w (task is %s)", ErrInvalidState, status)
 }
