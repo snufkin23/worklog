@@ -43,3 +43,13 @@ fmt:
 hooks:
 	git config core.hooksPath .githooks
 	chmod +x .githooks/*
+
+.PHONY: check
+check:
+	@test -z "$$(gofmt -l server cli)" || (echo "Not formatted, run: make fmt" && gofmt -l server cli && exit 1)
+	$(MAKE) -C server vet
+	$(MAKE) -C server test
+	$(MAKE) -C cli vet
+	$(MAKE) -C cli test
+	$(MAKE) -C mobile analyze
+	$(MAKE) -C mobile test

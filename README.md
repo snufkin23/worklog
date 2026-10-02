@@ -14,3 +14,9 @@ Go (modular monolith) / Postgres (Neon) / Cloud Run / GitHub Actions / FCM / Flu
 - [ ] Phase 4: tests, docs, demo
 
 See [docs/architecture.md](docs/architecture.md).
+
+## Docs
+- [Architecture](docs/architecture.md)
+- [Roadmap](docs/roadmap.md)
+- [Data model](docs/data-model.md)
+- [References](docs/references.md)
