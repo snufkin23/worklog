@@ -1,3 +1,3 @@
 module github.com/snufkin23/worklog/server
 
-go 1.28
+go 1.27

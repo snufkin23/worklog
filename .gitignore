@@ -13,3 +13,9 @@ service-account*.json
 /mobile/build/
 /mobile/.dart_tool/
 *.iml
+
+# OS and IDE
+.DS_Store
+.idea/
+*.iml
+mobile/.fvm/

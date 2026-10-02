@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+secrets=$(echo "$staged" | grep -E '\.env$|service-account.*\.json$' || true)
+if [ -n "$secrets" ]; then
+  echo "Blocked: secret files are staged:"
+  echo "$secrets"
+  exit 1
+fi
+
+go_files=$(echo "$staged" | grep -E '\.go$' || true)
+if [ -n "$go_files" ]; then
+  echo "$go_files" | xargs gofmt -w
+  echo "$go_files" | xargs git add
+fi
+
+dart_files=$(echo "$staged" | grep -E '^mobile/.*\.dart$' | grep -vE '\.(g|freezed)\.dart$' || true)
+if [ -n "$dart_files" ]; then
+  (cd mobile && echo "$dart_files" | sed 's#^mobile/##' | xargs fvm dart format)
+  echo "$dart_files" | xargs git add
+fi

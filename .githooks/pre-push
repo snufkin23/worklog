@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
+if [ -n "$upstream" ]; then
+  changed=$(git diff --name-only "$upstream"...HEAD)
+else
+  changed=$(printf 'server/\ncli/\nmobile/\n')
+fi
+
+for dir in server cli; do
+  if echo "$changed" | grep -q "^$dir/"; then
+    echo "==> checking $dir"
+    unformatted=$(gofmt -l "$dir")
+    if [ -n "$unformatted" ]; then
+      echo "Not formatted:"
+      echo "$unformatted"
+      echo "Run: make fmt"
+      exit 1
+    fi
+    make -C "$dir" vet
+    make -C "$dir" test
+  fi
+done
+
+if echo "$changed" | grep -q '^mobile/'; then
+  echo "==> checking mobile"
+  (cd mobile && fvm dart format --output=none --set-exit-if-changed lib test)
+  make -C mobile analyze
+  make -C mobile test
+fi
+
+echo "All checks passed."
