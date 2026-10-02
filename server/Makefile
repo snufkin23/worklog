@@ -3,7 +3,7 @@ APP := worklog-server
 .PHONY: run build test fmt vet tidy
 
 run:
-	go run ./cmd/api
+	set -a; . ./.env; set +a; go run ./cmd/api
 
 build:
 	go build -o bin/$(APP) ./cmd/api
