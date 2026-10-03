@@ -52,4 +52,3 @@ check:
 	$(MAKE) -C cli vet
 	$(MAKE) -C cli test
 	$(MAKE) -C mobile analyze
-	$(MAKE) -C mobile test

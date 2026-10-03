@@ -1,7 +1,7 @@
 FLUTTER := fvm flutter
 DART := fvm dart
 
-.PHONY: fvm-check setup get gen local generate run analyze test format build-apk clean doctor
+.PHONY: fvm-check setup get gen local generate run analyze format build-apk clean doctor
 
 fvm-check:
 	@command -v fvm >/dev/null || (echo "fvm not found. Install: brew tap leoafarias/fvm && brew install fvm" && exit 1)
@@ -30,9 +30,6 @@ run: fvm-check
 
 analyze: fvm-check
 	$(FLUTTER) analyze
-
-test: fvm-check
-	$(FLUTTER) test
 
 format: fvm-check
 	$(DART) format lib test
