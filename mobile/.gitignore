@@ -1,3 +1,26 @@
 .env
+
 .fvm/
+
 .vscode/
+
+build/
+
+# Generated localization files
+lib/l10n/app_localizations.dart
+lib/l10n/app_localizations_*.dart
+
+# Freezed generated files
+**/*.freezed.dart
+
+# Riverpod generated files
+**/*.g.dart
+
+# AutoRoute generated files
+**/*.gr.dart
+
+# Injectable generated files
+**/*.config.dart
+
+# FlutterGen
+lib/gen/

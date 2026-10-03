@@ -12,6 +12,7 @@ import (
 	"github.com/snufkin23/worklog/server/internal/entries"
 	"github.com/snufkin23/worklog/server/internal/platform"
 	"github.com/snufkin23/worklog/server/internal/tasks"
+	"github.com/snufkin23/worklog/server/internal/today"
 )
 
 func main() {
@@ -26,6 +27,11 @@ func run() error {
 		return err
 	}
 
+	loc, err := platform.LoadAppLocation()
+	if err != nil {
+		return err
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -35,9 +41,13 @@ func run() error {
 	}
 	defer pool.Close()
 
+	taskStore := tasks.NewStore(pool)
+	entryStore := entries.NewStore(pool)
+
 	api := http.NewServeMux()
-	tasks.NewHandler(tasks.NewStore(pool)).Register(api)
-	entries.NewHandler(entries.NewStore(pool)).Register(api)
+	tasks.NewHandler(taskStore).Register(api)
+	entries.NewHandler(entryStore).Register(api)
+	today.NewHandler(taskStore, entryStore, loc).Register(api)
 
 	root := http.NewServeMux()
 	root.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
