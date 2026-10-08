@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:worklog/core/app/app_state/app_controller.dart';
@@ -14,13 +15,9 @@ class App extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<AppState>(appControllerProvider, (AppState? previous, AppState next) {
       next.when(
-        guest: () {},
-        unauthenticated: (_) {
-          appRouter.replace(const LoginRoute());
-        },
-        authenticated: () {
-          appRouter.replace(const HomeRoute());
-        },
+        guest: () => appRouter.replaceAll(<PageRouteInfo<Object?>>[const WelcomeRoute()]),
+        unauthenticated: (_) => appRouter.replaceAll(<PageRouteInfo<Object?>>[const LoginRoute()]),
+        authenticated: () => appRouter.replaceAll(<PageRouteInfo<Object?>>[const HomeRoute()]),
       );
     });
 
