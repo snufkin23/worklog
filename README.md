@@ -1,5 +1,7 @@
 # worklog
 
+[![CI](https://github.com/snufkin23/worklog/actions/workflows/ci.yml/badge.svg)](https://github.com/snufkin23/worklog/actions/workflows/ci.yml)
+
 A personal work tracker that automates the daily reporting loop: log tasks,
 progress and blockers during the day; get an automatic end-of-day summary and
 a morning notification with the day's focus.
